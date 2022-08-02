@@ -1,6 +1,6 @@
 # Das WorkBook zur VU "How 2 do Things with Numbers" aus dem SS 2022
 
-Hier findet Ihr das R Bookdown-Projekt zur **VU "How 2 do Things with Numbers: Grundlagen der quantitativen Datenerhebung und -analyse (mit R)"** aus dem **SS 2022**.
+Hier findet Ihr das R Bookdown-Projekt zur **VU "How 2 do Things with Numbers: Grundlagen der quantitativen Datenerhebung und -analyse (mit R)"**. Diese VU wurde im **SS 2022** am Institut für Geographie der Universität Innsbruck abgehalten.
 
 Das Workbook wurde in RStudio als [Bookdown-Projekt](https://bookdown.org/) erstellt. Zu den Foldern:
 
