@@ -1,0 +1,37 @@
+---
+title: "How 2 do Things with Numbers (SS 2022)"
+subtitle: "Grundlagen der quantitativen Datenerhebung und -analyse (mit R)"
+author: "Kami Höferl | https://orcid.org/0000-0002-5397-180X"
+date: "Stand: `r Sys.Date()`"
+bibliography: kmh.bib
+csl: chicago-author-date-de.csl
+link-citations: yes
+site: "bookdown::bookdown_site"
+---
+
+<div style="margin-bottom:50px;"></div>
+ 
+```{r messen2, echo=FALSE, out.width="400px", fig.align = "center"}
+knitr::include_graphics("images/cover_v2-0.jpg")
+```
+
+<div style="margin-bottom:50px;"></div>
+
+# Howdy {-}
+
+In diesem WorkBook werden Materialien zur **VU "Sozialwiss. Methoden – How 2 do Things with Numbers" (716408)** aus dem **SS 2022** angeboten. Diese VU richtet sich an Personen, die 
+
+* ihre Fertigkeiten zur Erhebung quantitativer Daten auffrischen wollen;
+* und grundlegende Möglichkeiten zur Auswertung quantitativer Daten mittels R und RStudio kennenlernen wollen.
+
+Sounds good?
+
+![](images/hell_yeah.gif){.videoframe width="250"}
+
+Let's roll ...
+
+---
+
+[![](images/cc_by_h35.jpg)](https://creativecommons.org/licenses/by/4.0/deed.de)
+
+Dieses WorkBook und alle darüber angebotenen Materialien (Code, Daten etc.) stehen – so nicht ausdrücklich anders angegeben – unter einer [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.de) Lizenz.

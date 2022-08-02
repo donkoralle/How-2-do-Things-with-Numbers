@@ -1,0 +1,211 @@
+# Die Basics zur Datenanalyse
+
+## 📢 Zielsetzung dieser Einheit {.unnumbered}
+
+Am Beginn dieser Einheit werden zunächst die unterschiedlichen **Phasen** eines idealtypischen **Analyseprozesses** dargelegt. Danach schauen wir uns an, wie ein solcher Analyseprozess mit den **Tools R und RStudio** gelingen kann. dazu werden in einem ersten Schritt die Grundlagen des **Datenhandlings** mittels R behandelt.
+
+------------------------------------------------------------------------
+
+## Daten analysieren - aber wie?
+
+Unabhängig von der gewählten Fragestellung bestehen Datenanalysen aus einer Abfolge unterschiedlicher **Arbeitsschritte**:
+
+![Ein idealtyptischer Analyseworkflow](images/workflow_v1_cr.jpg){.videoframe .fullscreen-enabled}
+
+Dieser idealtypische Workflow muss dabei nicht zwingend linear durchlaufen werden. Die Farbgebung in obiger Darstellung deutet bereits an, dass wir in diesem Prozess drei große Abschnitte unterscheiden können:
+
+1.  Die initiale **Datenbeschaffung**
+2.  Die **Aufbereitung und Analyse** dieser Daten
+3.  Die **Dokumentation** der erzeugten Daten und Ergebnisse
+
+## Die Hilfsmittel R & RStudio
+
+Um den zuvor beschriebenen Analyseprozess auch umzusetzen reichen theoretisch Stift und Papier. Praktisch kann man dazu aber auf ein breites Angebot an [Software Lösungen](https://de.wikipedia.org/wiki/Liste_von_Statistik-Software) zurückgreifen. Für eine [am Grundsatz der Offenheit orientierten Forschung](https://de.wikipedia.org/wiki/Offene_Wissenschaft) werden wir uns in weiterer Folge mit der [Programmiersprache R](https://de.wikipedia.org/wiki/R_(Programmiersprache)) auseinandersetzen. Einige rahmende Ausführungen zu R finden sich hier:
+
+```{r echo=FALSE}
+mySlideshow <- "eh6-1_r_basics_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div><br>",
+  sep = ""))
+```
+
+
+👉 Interessierte möchte ich an dieser Stelle auf Walter Grubers [**"Reinführung in RStudio"**](https://wgruber.github.io/R-Intro/aufbau-des-kurses.html#allgemeines) aufmerksam machen, die einen kurzweiligen Überblick auf die Entstehung der Programmiersprache R (und noch viel mehr) bietet.
+
+Um den Umgang mit **R komfortabler** zu gestalten, kann auf sgn. integrierte Entwicklungsumgebungen ("integrated development environment - IDE") zurückgegriffen werden. Klingt technisch, heißt praktisch lediglich dass IDEs wie [**RStudio**](https://de.wikipedia.org/wiki/RStudio) helfen, Analyseprozesse mit R übersichtlicher umzusetzen. Lukas Burk und Tobias Anton bieten in ihrer lesenswerten Einführung ["R für Psychos"](https://r-intro.tadaa-data.de/book/) eine [**gelungene Einführung in RStudio**](https://r-intro.tadaa-data.de/book/orientierung.html#rstudio) an. Kurz und gut: Lesen Sie bitte diese Einführung in RStudio dort nach.
+
+## Grundlegende Datenstrukturen in R
+
+------------------------------------------------------------------------
+
+**⏳ Work in Progress ⏳***
+
+**🔽[Till then: Download it here](06_basic_datatypes_v1.R)🔽**
+
+------------------------------------------------------------------------
+
+
+
+
+
+## Daten im- und exportieren
+
+Der Im- und Export von Daten ist zentraler Bestandteil jeder Datenanalyse. R und RStudio bieten dazu die unterschiedlichsten Möglichkeiten, von denen wir uns einige näher ansehen wollen.
+
+**Ein Hinweis:** Da R skriptbasiert ist, müssen die zu Locations der zu im- oder portierenden Datensätze als absolute oder meist als relative Pfadangaben gesetzt werden. Um dieses Referenzieren von Datensätzen einheitlicher zu gestalten, empfiehlt es sich, seinen Projekten folgende Minimalstruktur zu verpassen:
+
+    Projektfolder
+    | skript_1.R
+    | ...
+    | skript_n.R    
+    |
+    +-- data
+        | datensatz_1.csv
+        | ...
+        | datensatz_n.csv
+
+Verweise auf Datensätze beginnen damit einheitlich mit "data". Ein Verweis auf datensatz_1.csv würde damit wie folgt aussehen: "data/datensatz_1.csv"
+
+In den meisten Fällen ist man - wie in dem obigen Beispiel - mit relativen Pfadangaben gut bedient. Dadurch kann bestehender Code leicht zwischen unterschiedlichen Systemen umgezogen werden.
+
+### Der Datenimport
+
+Nach dieser Einleitung wollen wir nun aber endlich Datensätze importieren. Was uns dazu noch fehlt? Daten!
+
+**🔽[Ein paar Übungsdatensätze zum Importieren finden sich hier.](data/data.zip)🔽**
+
+Das ZIP-Archiv mit unseren Übungsdaten entpacken wir in den Ordner "data".
+
+Das Dateiformat **MS-Excel (XLSX)** ist wohl eines der bekanntesten. Der Import solcher Tabellenblätter kann mit einer Vielzahl von Packages bewerkstelligt werden. Das **Package readxl** verzichtet dazu auf Java etc., was es zu einer leichten und schnellen Lösung macht.
+
+```{r}
+library(readxl)
+xlsx.laender <- read_excel("data/laender.xlsx", sheet = "aut-de-ch")
+xlsx.laender
+```
+
+Im Gegensatz dazu können im **Comma Sperated Values (CSV)** Format abgelegte Daten sehr gut auch ohne zusätzliche Packages mit den Befehlen read.csv und read.csv2 importiert werden: Ersterer geht von Beistrichen als Feldtrennzeichen und Punkten als Dezimaltrennzeichen, letzterer von Strichpunkten als Feldtrennzeichen und Beistrichen als Dezimaltrennzeichen.
+
+```{r}
+csv.laender <- read.csv2("data/laender.csv")
+csv.laender
+```
+
+> 📚 **Exkurs:**\
+> Ein Klick auf ein Datenfile offenbart ein Feature namens "Import dataset ..." das ein einfaches graphisches Interface zur Voransicht der zu importierenden Datensätze bietet.
+
+Der Import von CSV-Datensätzen kann auch direkt über das **HTTP-Protokoll** angestoßen werden. dazu ein kurzes Beispiel aus dem [COVID19-Dashboard](https://covid19-dashboard.ages.at) der [Österreichischen Agentur für Ernährungssicherheit (AGES)](https://www.ages.at/startseite/):
+
+```{r}
+CovidFaelle <- read.csv2("https://covid19-dashboard.ages.at/data/CovidFaelle_GKZ.csv",
+                         encoding = "UTF-8",
+                         dec = ".")
+str(CovidFaelle)
+```
+
+Es können aber auch **"ausgefallenere" Formate** importiert werden: Eigentlich nicht so ausgefallen, dafür weniger bekannt ist das R-eigene RDS-Format. Dieses binäre Format unterstützt die Übergabe von Faktoren (= praktisch):
+
+```{r}
+rds.laender <- readRDS("data/laender.rds")
+str(rds.laender)
+```
+
+Über [Packages wie haven](https://cran.r-project.org/web/packages/haven/index.html) können auch die hauseigenen Formate anderer Statistikpakete - wie beispielsweise SPSS - eingelesen werden. Je nach Package werden dabei verschiedene Metadaten zu den einzelnen Variablen mit importiert:
+
+```{r}
+library(haven)
+spsslaender <- read_sav("data/laender.sav")
+str(spsslaender)
+```
+
+**Ein komplexerer Zugang zum Thema Datenimport:**\
+Es können über [Packages wie rvest](https://blog.rstudio.com/2014/11/24/rvest-easy-web-scraping-with-r/) auch einzelne HTML-Elemente aus Websites ausgelesen und importiert werden. Mit Code-Support der [R Psychos Lukas Burk und Tobias Anton](https://r-intro.tadaa-data.de/book/) kann man beispielsweise die [Rankings des World Happiness Reports 2020 aus Wikipedia](https://en.wikipedia.org/wiki/World_Happiness_Report) absaugen:
+
+```{r BSP Wikipedia}
+library(rvest)    # Schnittstelle zum http(s) Protokoll
+library(dplyr)    # Grammar of Data Manipulation (vgl. "Tidyverse") -> "pipes"
+
+happiness2020 <- read_html("https://en.wikipedia.org/wiki/World_Happiness_Report") %>%
+  html_nodes("table") %>%   # liefert Lister aller table-Elemente
+  .[11] %>%                 # 11tes table-Element (manuell ermittelt)
+  html_table(header = NA, trim = TRUE, fill = TRUE) %>%
+  .[[1]]                    # hä? html_table liefert eine Liste von Dataframes, wir wollen davon den ersten
+head(happiness2020)
+```
+
+### Der Datenexport
+
+Und wie können Daten nun wieder exportiert werden?
+
+Bevor wir unsere Übungsdaten wieder exportieren, wollen wir noch flott zwei kleine Manipulationen vornehmen: Wir ermitteln für unsere kleine Ländersammlung die Bevölkerungsdichte und ordnen die Spalten inhaltlich konsistenter an.
+
+```{r BSP Manipulation}
+# Bevölkerungsdichte auf 2 Nachkommastellen genau ermitteln
+rds.laender$bevdichte <- round((rds.laender$ew*1000)/rds.laender$area, 2)
+
+# Spalten noch etwas inhaltlich konsistenter anordnen
+rds.laender.ex <- rds.laender[, c("land", "area", "ew", "bevdichte", "eumitglied", "creditrating")]
+rds.laender.ex
+```
+
+Diesen kleinen Dataframe wollen wir nun in unterschiedliche Formate exportieren - beispielsweise in ein **Excel-Sheet** mittels des [Packages writexl](https://cran.r-project.org/web/packages/writexl/writexl.pdf):
+
+```{r}
+library(writexl)
+write_xlsx(rds.laender.ex, "data/myLaender.xlsx")
+```
+
+... oder als **CSV-Datei** (sicherheitshalber mit Angabe des Encodings):
+
+```{r}
+write.csv2(rds.laender.ex, "data/myLaender.csv", fileEncoding = "UTF-8")
+```
+
+... oder als **RDS-Datei**:
+
+```{r}
+saveRDS(rds.laender.ex, "data/myLaender.rds")
+```
+
+... oder als SAV-Datei für SPSS mittels des [haven-Packages](https://cran.r-project.org/web/packages/haven/index.html):
+
+```{r}
+write_sav(rds.laender.ex, "data/myLaender.sav")
+```
+
+... oder als reiner Text für die Zwischenablage:
+
+```{r}
+# V1: in die Console zum manuellen Kopieren
+write.table(rds.laender.ex)
+# V2: mit Tabulatoren als Feldtrennzeichen und keinen Zeilenbeschriftungen direkt in die Zwischenablage
+write.table(rds.laender.ex, "clipboard", sep="\t", row.names=FALSE)
+```
+
+------------------------------------------------------------------------
+
+🏆 **Nun wissen wir, ...**
+
+-   welche **Schritte** eine Datenanalyse ausmachen.
+-   welche grundlegenden **Datenstrukturen** in R vorhanden sind.
+-   wie wir unterschiedlichen **Skalenniveaus** in R abbilden können.
+-   wie wir Datensätze **in R im- und aus R exportieren** können.
+
+And now it's **time for some action** ...
+
+![](images/cat_computer.gif){.videoframe width="250"}

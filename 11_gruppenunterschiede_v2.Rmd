@@ -1,0 +1,415 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+# Gruppenunterschiede erforschen {#gruppenunterschiede}
+
+
+## 📢 Zielsetzung dieser Einheit {.unnumbered}
+
+
+In dieser Einheit wollen wir uns dem Erkunden von **Gruppenunterschieden** widmen. Dazu werden wir
+
++ die Frage behandeln, welche **prinzipiellen Verfahren** uns dazu zur Verfügung stehen;
++ anhand eines Beispiels Varianten der **einfaktoriellen Varianzanalyse** als Vertreter parametrischer Verfahren ausprobieren;
++ anhand eines Beispiels den **Kurskal-Wallis-Test** als Vertreter nicht parametrischer Verfahren kennenlernen.
+
+
+```{r echo=FALSE, purl=FALSE}
+myScriptname <- "11_gruppenunterschiede_v2"
+
+knitr::asis_output(paste(
+  "<p><strong>tl;dr: </strong>",
+  "<a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/",
+  myScriptname,
+  ".R\" type=\"application/octet-stream\">Her mit dem Code!</a></p>",
+  sep = ""))
+```
+
+---
+
+## Die Ausgangslage
+
+
+Oftmals stellt sich bei Analysen die Frage, ob zwischen Gruppen Unterschiede bestehen. Beispielsweise, ob es einen Einkommensunterschied zwischen Männern und Frauen gibt. Deskriptive Zugänge wie der qualitative Vergleich von Lageparametern kann dazu eine gute Grundlagen bilden. Einen Test auf Signifikanz kann so aber nicht erbracht werden. Daher wurden eine Reihe unterschiedlicher Testverfahren zur Prüfung signifikanter Gruppenunterschiede entwickelt.
+
+Aufbauend auf das aus der letzten Einheit \@ref(zusammenhaenge-metrisch) bekannten Beispiel zum COVID-19 Infektionsgeschehen in Österreich wollen wir in dieser Einheit folgender Frage nachgehen:
+
+🤔 **Sehen wir bei den an und mit COVID-19 Verstorbenen je 100.000 Einwohnern Unterschiede zwischen den Bundesländern?**
+
+Erneut nutzen wir die aus Einheit \@ref(ausgangDeskriptivMetrisch) bekannten Beispieldaten der [Österreichischen Agentur für Gesundheit und Ernährungssicherheit AGE](https://www.ages.at/startseite/) zu [COVID-19 Fällen in den politischen Bezirken Österreich](https://www.data.gv.at/katalog/dataset/2f6649b6-2b2d-49a9-ab31-6c7e43728001).
+
+**Ein praktischer Hinweis:**\
+Um diese Einheit auch zu einem späteren Zeitpunkt nachvollziehen zu können, werden nicht die tagesaktuellen Daten der AGES genutzt. Stattdessen wurden diese Daten zum Stichtag 25.05.2021 bezogen und als CSV-Datensatz abgelegt. Diese Stichtagsdaten können [**hier als CSV-Datei heruntergeladen**](data/agesRohdaten_25-05-21.csv) werden.
+
+> **👉 Anmerkung**: Wir gehen in dieser Einheit von folgender Verzeichnisstruktur aus:
+
+    **Projektfolder**
+    | skript_1.R
+    | ...
+    | skript_n.R    
+    +-- data
+    |     | datensatz_1.xyz
+    |     | ...
+    |     | datensatz_n.xyz
+    +-- output
+   
+
+## Datenimport und -aufbereitung
+
+
+Bevor wir uns der Erkundung möglicher Gruppenunterschiede widmen können, müssen wir zunächst
+
+* die Rohdaten **importieren**
+* eine **Normierung** der Daten vornehmen (Variablen "..._100k")
+* und die **Bundeslandzugehörigkeit** der Bezirke (Variable "bula") ermitteln.
+
+Un damit kommen wir zu Folgendem:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(scales)
+
+agesRohdaten <- read.csv2("data/agesRohdaten_25-05-21.csv", encoding = "UTF-8") %>%
+  as_tibble()
+covidCases <- agesRohdaten %>%
+  mutate(Anzahl_100k = Anzahl/(AnzEinwohner/100000),
+         AnzahlTot_100k = AnzahlTot/(AnzEinwohner/100000),
+         Anzahl7Tage_100k = AnzahlFaelle7Tage/(AnzEinwohner/100000))
+covidCases <- covidCases %>%
+  mutate(bula = factor(floor(GKZ/100),
+                       levels = c(1:9),
+                       labels = c("Burgenland",
+                                  "Kärnten",
+                                  "Niederösterreich",
+                                  "Oberösterreich",
+                                  "Salzburg",
+                                  "Steiermark",
+                                  "Tirol",
+                                  "Vorarlberg",
+                                  "Wien")
+                       )
+         )
+```
+
+
+## Vorbereitende Überlegungen
+
+
+Der Frage, ob es zum Stichtag 25.05.2021 zwischen den Bundesländern **signifikante Unterschiede bei der COVID-19 bedingten Mortalität** gibt, wollen wir uns zunächst graphisch annähern. Dazu greifen wir auf die aus Einheit \@ref(deskriptiv-metrisch) bekannten Boxplots zurück:
+
+```{r}
+ggplot(covidCases, aes(x = forcats::fct_reorder(bula, AnzahlTot_100k, median), y = AnzahlTot_100k)) +
+  geom_boxplot(fill = "azure3") +
+  geom_jitter(shape=16, position=position_jitter(0.1),
+              color = "red", alpha = 0.2) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.text.x=element_text(angle = 45, hjust = 1)) +
+  labs(title = "COVID-19 Todesfälle nach Bundesländern\n",
+       x = "\nBundesländer",
+       y = "COVID-19 Todesfälle\nje 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at")
+```
+
+Ein Blick auf die **Lage der Mediane** verrät uns, dass wir die Frage nach Unterschieden bejahen können. Beispielsweise liegt der Median der Mortalität in der Steiermark mehr als doppelt so hoch, als in Vorarlberg. Ob sich die Mortalität in den Bundesländern Tirol, Burgenland, Nieder-, Oberösterreich, Salzburg und Wien signifikant voneinander unterscheiden, lässt sich jedoch nicht sagen. Oder etwas allgemeiner formuliert: **Zwischen welchen Paarkombinationen signifikante Unterschiede** vorliegen oder nicht, kann eben nur ein Verfahren zur Aufdeckung von Gruppenunterschieden leisten.
+
+
+### Ermitteln des passenden Verfahrens
+
+
+Unsere bereits bekannte Übersicht zu möglichen Auswerteverfahren legt uns nahe, zunächst die **Frage nach der Normalverteilung** unserer metrischen Variable AnzahlTot_100k zu stellen:
+
+
+```{r methodchart11, out.width=600, echo=FALSE, fig.cap="Auswerteverfahren für unabhängige Stichproben (Quelle: Eigene Überarbeitung 2016 von [Hager, 2011](https://www.univie.ac.at/soziologie-statistik/lingu/master/Signifikanztests.pdf))", out.extra = "class = 'videoframe fullscreen-enabled'"}
+knitr::include_graphics("images/EH5_1_Gruppenunterschiede-Slide-4_cut.png")
+```
+
+Um herauszufinden, welches Verfahren für unseren Fall passt, überprüfen wir zunächst, ob die Mortalität in den Bundesländern **normalverteilt** ist. Dazu werfen wir zunächst einen Blick auf den **Q-Q-Plot** der Variable AnzahlTot_100k ...
+
+```{r}
+ggplot(covidCases, aes(sample = AnzahlTot_100k)) +
+  stat_qq(color = "red") +
+  stat_qq_line()
+```
+
+... und die **Q-Q-Plots** der bundeslandspezifischen Mortalitäten:
+
+```{r}
+ggplot(covidCases, aes(sample = AnzahlTot_100k, color = bula)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~ bula)
+```
+
+In beiden Fällen sehen wir eine gute Überlagerung zwischen der empirischen und theoretischen Verteilung, was eine Normalverteilung der Mortalität nahelegt. Ergänzend prüfen wir auch mittels des **Shapiro-Wilks-Tests**, ob eine Normalverteilung vorliegt:
+
+```{r}
+library(rstatix)
+
+# Wien entfernen, da nur 1 Beobachtung in diesem Bundesland
+covidCasesNoVie <- covidCases %>%
+  filter(bula != "Wien")
+
+covidCasesNoVie %>%
+  # group_by(bula) %>%
+  rstatix::shapiro_test(AnzahlTot_100k) %>%
+  arrange(p)
+```
+
+Hier bestätigen die deutlich über der Irrtumswahrscheinlichkeit von 5% liegenden p-Values die **Normalverteilung der Mortalität** in den den Bundesländern.
+
+😎 Damit wissen wir, dass eine **einfaktorielle Varianzanalyse (ANOVA)** zum Ziel führt. Dabei müssen wir noch mit einem **Levene-Test** überprüfen, ob die **Varianzen in den Bundesländern homogen** verteilt sind:
+
+```{r}
+covidCasesNoVie %>%
+  rstatix::levene_test(AnzahlTot_100k ~ bula) %>%
+  knitr::kable()
+```
+
+Der knapp über der Irrtumswahrscheinlichkeit von 5% liegende p-Value spricht für eine (knapp) noch gegebene Varianzhomogenität. Wir können damit auf das [**Standardmodell der einfaktoriellen Varianzanalyse**](https://www.uni-wuerzburg.de/fileadmin/10040800/user_upload/hain/SPSS/ANOVA.pdf) zurückgreifen.
+
+
+> 📚 **Exkurs:**\
+> Hätten wir keine Varianzhomogenität festgestellt, müssten wir uns für eine [**robuste einfaktorielle Varianzanalyse nach Welch**](https://www.uni-wuerzburg.de/fileadmin/10040800/user_upload/hain/SPSS/ANOVA.pdf) entscheiden. Was in diesem Fall zu beachten wäre, besprechen wir in Kapitel \@ref(welch).
+
+
+## Gruppenunterschiede bei normalverteilten Variablen mittels Varianzanalyse untersuchen
+
+
+Eine **einfaktorielle Varianzanalyse** stoßen wir mittels folgendem Befehl an:
+
+```{r message=FALSE, warning=FALSE}
+covidCasesNoVie %>%
+  rstatix::anova_test(AnzahlTot_100k ~ bula) %>%
+  knitr::kable()
+```
+
+Der ermittelte p-Value deutlich unter der Irrtumswahrscheinlichkeit von 5% spricht für die 1-Hypothese **signifikanter Unterschiede bei der Mortalität** zwischen den Bundesländern.
+
+Gut. Heißt das jetzt, dass wir gerade zwischen allen Bundesländern signifikante Unterschiede nachgewiesen haben?
+
+Nein, denn unsere Interpretation des Boxplots legt uns die Vermutung nahe, dass wir beispielsweise zwischen Oberösterreich und Salzburg solche Unterschiede nicht vorhanden sind. Wir müssen also noch für alle **Paarkombinationen** überprüfen, ob die betreffenden beiden Mittelwerte signifikant voneinander abweichen oder nicht. Dieser Vergleich zweier Mittelwerte kann bei gegebener Varianzhomogenität mittels [**Tukeys HSD (Honest Significant Difference)-Test**](https://en.wikipedia.org/wiki/Tukey%27s_range_test) erfolgen. Da dieser Test der eigentlich ANOVA nachgeschaltet wird, wird hier auch gerne von sgn. **Post-Hoc-Tests** gesprochen. Warum nachgeschaltet: Ergibt die ANOVA keine signifikanten Unterschiede, muss man auch nicht auf Ebene der Paarkombinationen nach ihnen suchen 🤦.
+
+```{r}
+covidCasesNoVie %>%
+  rstatix::tukey_hsd(AnzahlTot_100k ~ bula) %>%
+  select(group1, group2, estimate, p.adj, p.adj.signif) %>%
+  arrange(p.adj)
+```
+
+Das Package rstatix formatiert uns die signifikanten paarweisen Unterschiede in der Spalte "p.adj.signif" mit Sternen. Je mehr Sterne, umso geringer ist der ermittelte p-Value (vgl. Spalte "p.adj"). Wir sehen also, dass nur zwischen 6 Paarkombinationen signifikante Unterschiede in der Mortalität vorliegen. Über einen Abgleich dieser Paarkombinationen mit dem Boxplot zur Mortalität kann letztlich noch die Validität dieser Signifikanzen nachvollzogen werden. In Summe sehen wir, dass sich vor allem das Bundesland **Steiermark** (wie bereits aus dem Boxplot zu erahnen war) von den restlichen Bundesländern hinsichtlich der Mortalität unterscheidet.
+
+
+### Gruppenunterschiede bei Variablen mit Varianzheterogenität erkunden {#welch}
+
+
+Sehen wir beim Levene-Test, dass Varianzheterogenität vorliegt, greift man zur [**robusten einfaktoriellen Varianzanalyse nach Welch**](https://www.uni-wuerzburg.de/fileadmin/10040800/user_upload/hain/SPSS/ANOVA.pdf).
+
+👉 **OBACHT:** Zu Übungszwecken wollen wir an dieser Stelle annehmen, dass in unserem Fall Varianzheterogenität vorliegt und wir uns daher für einen **Welch-Test** entscheiden:
+
+```{r}
+covidCasesNoVie %>%
+  welch_anova_test(AnzahlTot_100k ~ bula) %>%
+  knitr::kable()
+```
+
+Analog zur klassischen Varianzanalyse verrät uns auch hier der p-Value, ob wir die Nullhypothese (idente Gruppenmittelwerte) ablehnen oder nicht. Da der ermittelte p-Value liegt deutlich unter der Irrtumswahrscheinlichkeit von 5% liegt, lehnen wir diese ab. Wir kommen zum Schluss, dass bei mindestens einer der möglichen Bundesland-Paarkombinationen ein **signifikanter Unterschied** in der mittleren Mortalität gegeben ist.
+
+Analog zu Tukeys HSD-Test ermöglicht bei Varianzheterogenität der [**Games-Howell-Test**](https://rpubs.com/aaronsc32/games-howell-test) den paarweisen Test auf Mittelwertgleichheit:
+
+```{r}
+covidCasesNoVie %>% 
+  games_howell_test(AnzahlTot_100k ~ bula) %>%
+  select(group1, group2, estimate, p.adj, p.adj.signif) %>%
+  arrange(p.adj)
+```
+
+Paarkombinationen mit einem p-Value (Spalte "p.adj") kleiner gleich der Irrtumswahrscheinlichkeit von 5% weisen **signifikant unterschiedliche Mittelwerte** in der Mortalität auf. Das rstatix-Package markiert diese signifikanten p-Values in der Spalte "p.adj.signif" mit Sternen. Je mehr Sterne umso geringer der jeweilig ermittelte p-Value.
+
+
+**Konklusio:**
+
+
+Wir sehen also, dass die Varianzanalysen bei Homo- bzw. Heterogenität der Varianzen sich eigentlich nur durch die unterschiedlichen Aufrufe der jeweiligen Prozeduren unterscheiden. Die **Interpretation** der Ergebnisse **unterscheidet sich nicht** voneinander.
+
+
+## Gruppenunterschiede bei ordinalen oder nicht normalverteilten Variablen
+
+
+Wie wir der Abbildung \@ref(fig:methodchart11) bereits entnommen haben, gibt es auch für nicht normalverteilte bzw. ordinale Variablen Verfahren, um Gruppenunterschieden nachzugehen. Der Klassiker für solche Fälle ist der [**Kruskal-Wallis Test**](https://www.methodenberatung.uzh.ch/de/datenanalyse_spss/unterschiede/zentral/kruskal.html). Mit diesem Test kann für unabhängige Stichproben (aka "Gruppen") hinsichtlich einer a) nicht-normalverteilten metrischen oder b) ordinalen Variable überprüft werden, ob diese einer gemeinsamen Grundgesamtheit entstammen. 
+
+**🤔 Warum sollte uns das interessieren?**  
+Der Statistik-Sprech "aus einer gemeinsamen Grundgesamtheit stammen" kann auch als "keine signifikanten Unterschiede zwischen den Gruppen" übersetzt werden.
+
+Dazu wollen wir uns ein kurzes Beispiel anschauen:
+
+
+### Vorbereitendes
+
+
+Wir wollen auf das bereits aus Einheit \@ref(haeufigkeit-kategorial) bekannte [Bevölkerungsbefragung des Presse- und Informationsamts der Deutschen Bundesregierung zum Thema "Corona-Krise"](https://dbk.gesis.org/dbksearch/GDesc2.asp?list=&search=&search2=&field=&field2=&jahr=&operator=&bool=&bool2=&maxRec=&sort=&DB=d&no=0205)  zurückgreifen.
+
+Die Daten (inkl. Fragebogen etc.) dieser Befragung aus der Kalenderwoche 45/2020 wurden dem gesis-Repositorium des Leibniz-Instituts für Sozialwissenschaften entnommen und können 👉 [hier als ZIP-Datei geladen](data/Trendfragen_Corona_45-20.zip) werden.
+
+Nach dem Download extrahieren wir diese Daten in den Ordner "Trendfragen_Corona_45-20" in unserem "data"-Verzeichnis:
+
+
+        Projektfolder
+        | skript_1.R
+        | ...
+        | skript_n.R
+        +-- data
+            +-- Trendfragen_Corona_45-20
+                | GESIS-Suche- Trendfragen Corona (Woche 45-2020).url
+                | ...
+                | ZA7677_v1-0-0.csv
+
+
+Um zu sehen, wie man mit einem [**Kruskal-Wallis-Test**](https://www.methodenberatung.uzh.ch/de/datenanalyse_spss/unterschiede/zentral/kruskal.html) auch für ordinal skalierte Variablen Gruppenunterschiede erkunden kann, wollen wir uns folgende Frage konzentrieren:
+
+🤔 **Unterschieden sich politische Gruppen hinsichtlich ihrer Sorge, sich mit COVID-19 anzustecken?**
+
+Dazu wollen wir
+
+-   die politischen Gruppen anhand der in Frage s7 erhobenen Bundestagswahlabsicht;
+
+-   und die Sorge sich mit COVID-19 anzustecken über die Frage bcor1_1 ("Machen Sie sich derzeit sehr große, große, weniger große oder keine Sorgen, dass Sie sich selbst mit dem Virus anstecken könnten?") operationalisieren.
+
+Und damit können wir die Befragungsdaten laden und uns die beiden Variablen von Interesse (bcor1_1 und s7) etwas genauer ansehen:
+
+```{r}
+Trendfragen <- read.csv2("data/Trendfragen_Corona_45-20/ZA7677_v1-0-0.csv", encoding = "UTF-8")
+SelTrendfragen <- Trendfragen %>%
+  select(s7, bcor1_1) %>%
+  mutate(bcor1_1 = factor(bcor1_1, exclude = c("k.A.", "weiß nicht")),
+         s7 = factor(s7, exclude = "-1")) %>%
+  filter(!is.na(bcor1_1) & !is.na(s7))
+```
+
+Über die Option exclude haben wir gerade beim Überführen der beiden Variablen in Faktoren Records mit keinen Antworten ("k.A." und "-1") sowie Records mit keinen klaren inhaltlichen Zuordnungen ("weiß nicht") als NAs kodiert und anschließend entfernt. Damit können wir einen ersten Blick auf die Wertverteilungen werfen:
+
+```{r testraw, results='asis'}
+table(SelTrendfragen$s7) %>%
+  knitr::kable("simple", col.names = c("s7", "Freq"))
+table(SelTrendfragen$bcor1_1) %>%
+  knitr::kable("simple", col.names = c("bcor1_1", "Freq"))
+```
+
+Bei der ordinalen Einschätzug der Sorge um eine Ansteckung (s7) sehen wir, dass die Levels noch ein wenig Ordnung vertragen könnten:
+
+```{r}
+SelTrendfragen <- SelTrendfragen %>%
+  mutate(bcor1_1 = forcats::fct_relevel(bcor1_1,
+                                        c("sehr große Sorgen",
+                                          "große Sorgen",
+                                          "weniger große Sorgen",
+                                          "keine Sorgen")
+                                        )
+         )
+```
+
+
+### Eine erster Blick auf die politischen Gruppen und deren Sorge vor einer Ansteckung
+
+
+Wie immer wollen wir zunächst einen graphischen Blick auf die politischen Gruppen und deren Sorgen vor einer Ansteckung werfen. Dazu hätten wir gerne ein Balkendiagramm, dass die politischen Gruppen nach deren Sorge vor eine Ansteckung sortiert:
+
+
+```{r}
+# Kontingenztabelle ermitteln & als Dataframe ablegen
+konttab <- table(SelTrendfragen$bcor1_1, SelTrendfragen$s7) %>%
+  prop.table(., margin = 2) %>%   # 2 ... Spaltenprozent
+  round(., 2) %>%
+  as.data.frame()
+
+vis.order <- konttab %>%
+  filter(Var1 == "keine Sorgen") %>%
+  arrange(Freq) %>%
+  select(Var2)
+vis.order.vector <- as.character(vis.order$Var2)
+
+# Datensatz für Visualisierung vorbereiten
+vis.data.1 <- SelTrendfragen
+vis.data.1$s7 <- factor(SelTrendfragen$s7, levels = vis.order.vector)
+
+ggplot(vis.data.1, aes(x = s7, fill = bcor1_1)) +
+  geom_bar(position = "fill", color = "black", width = 0.7) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip() +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        panel.grid.major.x = element_line(color = "gray")) +
+  labs(title = "Sorge um Ansteckung nach Bundestagswahlabsicht\n",
+       caption = "\n(Daten: Presse- und Informationsamt der Deutschen Bundesregierung, 2021)",
+       x = "Bundestagswahlabsicht\n",
+       y = "",
+       fill = "Sorge um Ansteckung") +
+  guides(fill = guide_legend(reverse = TRUE))
+
+```
+
+
+Wir sehen, dass vor allem die Anhänger der AfD geringe, Anhänger der CDU/CSU, SPD sowie der Grünen vergleichsweise größere Sorgen vor einer Ansteckung mit COVID-19 haben. Wie belastbar diese ersten groben Erkenntnisse zu den Gruppenunterschieden sind, kann uns nun der **Kruskal-Wallis-Test** verraten
+
+
+### Gruppenunterschieden mit dem Kruskal-Wallis-Test nachgehen
+
+
+Wie alle Tests wird auch beim Kruskal-Wallis-Test ein p-Wert ermittelt, der uns hilft, sich für eine dieser beiden Hypothesen zu entscheiden:
+
+-   **H0:** Zwischen den Gruppen bestehen keine signifikanten Unterschiede.
+
+-   **H1:** Zwischen den Gruppen bestehen signifikante Unterschiede.
+
+Über das bereits bekannte **statix-Package** können wir die Berechnung dieses p-Wertes anstoßen:
+
+
+```{r}
+library(rstatix)
+SelTrendfragen %>%
+  kruskal_test(bcor1_1 ~ s7) 
+  # knitr::kable("simple")
+```
+
+
+Der klar unter unserer Irrtumswahrscheinlichkeit von 5% liegende p-Wert legt uns nahe, die Nullhypothese zu verwerfen. Somit gelangen wir zum Schluss, dass es zwischen den politischen Ausrichtungen **signifikante Unterschiede** in der Sorge vor einer Ansteckung geben muss.
+
+🤔 Aber zwischen welchen politischen Ausrichtungen?
+
+Diese Frage können wir mit einem Post-Hoc Test beantworten, bei dem alle Paarkombinationen auf signifikante Unterschiede hin untersucht werden. Im Fall des Kruskal-Wallis-Tests greifen wir zum sgn. [**Dunn-Test**](https://www.methodenberatung.uzh.ch/de/datenanalyse_spss/unterschiede/zentral/kruskal.html#3.3._Post-hoc-Tests). 
+
+Über das rstatix-Package können wir diesen wie folgt aufrufen:
+
+```{r}
+SelTrendfragen %>%
+  dunn_test(bcor1_1 ~ s7, p.adjust.method = "holm") %>%
+  select(group1, group2, p, p.adj, p.adj.signif) %>%
+  filter(p.adj <= 0.1) %>%    # Blick auf die knapp nicht signifikanten Unterschiede
+  arrange(group1) %>%         # Hervorheben der Unähnlichsten
+  knitr::kable(digits = 3, "pipe")
+```
+
+
+Wie bereits aus der graphischen Interpretation vermutet, unterscheidet sich die Gruppe der AfD-Affinen klar von anderen politischen Gesinnungen: Hier sehen wir die geringste Sorge vor einer Ansteckung. Weiters sehen wir, dass sich Teile des Blocks CDU-SPD-Grüne klar von FDP-SympathisantiInnen und NichtwählerInnen unterscheiden. Während erstere die klar größte Sorgen vor einer Ansteckung haben, machen sich letztere deutlich geringe Sorgen darum. 
+
+
+------------------------------------------------------------------------
+
+
+🏆 **Nun wissen wir, ...**
+
+- dass das Wissen über **Eigenschaften der genutzten Variablen** - wie beispielsweise deren Normalverteilung - zentral für Wahl der passenden Analyseverfahrens ist;
+- dass bei der Beurteilung der Normalverteilung einer Variable immer ein gewisser **Interpretationsspielraum** bleibt;
+- dass Tests auf Gruppenunterschiede stets mit **Post-Hoc-Tests** kombiniert werden, um auf paarweise Unterschiede schließen zu können;
+
+Und damit wären wir auch am Ende dieses Kurses angekommen.
+
+**Congrats! 🚀🥳🎉**
+
+
+![](images/to_the_bar.gif){.videoframe width="250"}

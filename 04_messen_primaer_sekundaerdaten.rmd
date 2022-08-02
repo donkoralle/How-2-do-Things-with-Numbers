@@ -1,0 +1,132 @@
+# Sekundärdaten gewinnen
+
+## 📢 Zielsetzung dieser Einheit {.unnumbered}
+
+Anhand der Unterscheidung zwischen Primär- und Sekundärdaten wollen wir in dieser Einheit die **Gewinnung von Sekundärdaten** behandeln. Neben der Frage wie Sekundärdaten prinzipiell erzeugt werden können, behandeln wir die **Erschließung** von Sekundärdaten mittels **Repositorien**. Abschließend werden wir uns über die **Qualität und Nutzbarkeit** von Sekundärdaten unterhalten.
+
+------------------------------------------------------------------------
+
+## (Sekundär-)Daten gewinnen
+
+Sekundärdaten wollen für gewöhnlich gefunden werden - aber wie und warum eigentlich? Diesen beiden Fragen wollen wir hier kurz nachgehen:
+
+```{r echo=FALSE}
+mySlideshow <- "eh4-1_daten_gewinnen_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div>",
+  sep = ""))
+```
+
+### Ein technischer Aspekt der Gewinnung von Sekundärdaten
+
+Sekundärdaten werden oftmals im [**Comma-Seperated Values (CSV)**](https://de.wikipedia.org/wiki/CSV_(Dateiformat)) Format vorgehalten. Was es mit diesem Format auf sich hat und warum ein guter Texteditor manchmal von Nutzen sein kann besprechen wir in diesem kurzen Video:
+
+```{r Video_csv, eval=knitr::is_html_output(), echo=FALSE}
+library(knitr)
+knitr::asis_output('<video  class="videoframe" width="600px" controls><source src="https://lms.uibk.ac.at/podcast/1194197008/Jfzmxx/103304845301718/_/uibkolat_1_102596873310246/media/eh2-2_datenhandling-csv_v2-2.mp4"></video>')
+```
+
+> **📚 Exkurs: Diakritische Zeichen**
+>
+> unterschiedliche diakritische Zeichen je Sprache → unterschiedliche Zeichenkodierungen von Text
+>
+> -   ASCII: American Standards Association - 1963
+>
+> -   ISO Standard: ISO 8859 für europäische Sprachen
+>
+> -   ISO 8859-1 (aka. Latin-1), erweitert ISO 8859-15
+>
+> -   Windows: Windows-1252 Westeuropäisch (= Fusion aus ISO 8859-1 und -15)
+>
+> -   Unicode (aka ISO 10646) internationaler Standard
+>
+> -   UTF-8: Universal Character Set Transformation Format\
+>     De-facto Standard im Netz, aber optimiert für EN
+
+## Zur Qualität von Sekundärdaten
+
+Nicht jeder verfügbare Datensatz sollte für wissenschaftliche Fragestellungen herangezogen werden. Entscheidend ist dessen **qualitative Eignung**. Was diese Eignung ausmacht und wie wir diese beurteilen können, wollen wir hier kurz behandeln:
+
+```{r echo=FALSE}
+mySlideshow <- "eh4-2_qualitaet_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div>",
+  sep = ""))
+```
+
+## Sekundärdaten als "Open Data" nutzen (können)
+
+Um Sekundärdaten produktiv nutzen zu können, müssen diese nicht nur über [Repositorien](https://www.forschungsdaten.info/themen/veroeffentlichen-und-archivieren/repositorien/) zugänglich gemacht sondern auch **lizenziert** werden. Was genau beim Lizenzieren von Daten passiert, wollen wir hier behandeln:
+
+```{r echo=FALSE}
+mySlideshow <- "eh4-3_nutzbarkeit_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div><br>",
+  sep = ""))
+```
+
+Die durch eine offene Lizenzierung entstehende [**"Offenheit" von Daten**](https://www.forschungsdaten.info/themen/finden-und-nachnutzen/open-data-open-access-und-nachnutzung/) erläutert uns [Matthias Hinz (Universität Rostock)](https://learn.opengeoedu.de) in diesem ScreenTalk:
+
+```{r Video_opendata, eval=knitr::is_html_output(), echo=FALSE}
+library(knitr)
+knitr::asis_output('<iframe class="videoframe" width="600" height="338" src="https://www.youtube.com/embed/6DncYkPZBc4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>')
+```
+
+------------------------------------------------------------------------
+
+🏆 **Nun wissen wir, ...**
+
+-   dass der Entscheidung, **Primär- und/oder Sekundärdaten** zu nutzen ein **pragmatischer Abgleich** unterschiedlicher Faktoren zugrunde liegt.
+-   dass Sekundärdaten meist durch **Klassifikation, Aggregation oder Generalisierung** aus Primärdaten erzeugt werden.
+-   dass wir Sekundärdaten über **Repositorien** erschließen können.
+-   dass die **Qualität** von Sekundärdaten durch deren **Metadaten** bestimmt wird.
+-   dass die **Nutzbarkeit** von Sekundärdaten durch deren **Lizenzierung** bestimmt wird.
+
+🤔 Und die **Primärdaten**?
+
+![](images/kirk_think.gif){.videoframe width="250"}

@@ -1,0 +1,89 @@
+# \@Home3: Zusammenhänge und Unterschiede
+
+## 📢 Zielsetzung {.unnumbered}
+
+Ziel dieser Aufgabe ist es, anhand von zwei Beispielen (A und B) eigenständig a) **Zusammenhänge und Gruppenunterschiede** zwischen metrischen Merkmalen sowie b) **Zusammenhänge zwischen kategorialen Variablen** zu erforschen und zu dokumentieren.
+
+------------------------------------------------------------------------
+
+## Beispiel A: COVID-19 Impfungen in Österreich
+
+Die uns mittlerweile gut bekannte Österreichische [Agentur für Gesundheit und Ernährungssicherheit AGE](https://www.ages.at/startseite/) bietet tagesaktuell Informationen zur [COVID-19 Schutzimpfungen auf Gemeindeebene](https://www.data.gv.at/katalog/dataset/d230c9e8-745a-4da3-a3b4-86842591d9f0) an. Nutzen sie diesen Datensatz um die folgenden zwei Fragen zu beantworten:
+
+**1. Gibt es auf Ebene der österreichischen Gemeinden einen Zusammenhang zwischen dem Anteil bzw. Besatz "älterer" Personen und dem Anteil bzw. Besatz der Personen mit aktiven COVID-19 Impfzertifikaten?**
+
+**2. Gibt es bei den aktiven COVID-19 Impfzertifikaten signifikante Unterschiede zwischen Gemeinden mit einem geringen/mittleren/hohen Anteil bzw. Besatz "älterer" Personen?**
+
+🧨 **Your Mission:**
+
+-   Operationalisieren Sie die Untersuchungsfragen:
+
+    -   Warum nutzen Sie Anteils- oder Besatzwerte in Ihrer Analyse?
+
+    -   Welche Schwellenwerte wurden zur Umsetzung des Begriffs "ältere" Personen genutzt und warum?
+
+    -   Wie erfolgte die Einteilung der Gemeinden in solche mit einem "geringen/mittleren/hohen Anteil bzw. Besatz älterer Personen"?
+
+        -   👉 drei Stichwörter dazu: Perzentile, quantcut & fct_recode
+
+-   Dokumentieren Sie Ihre Vorannahmen zu den Untersuchungsfragen;
+
+-   Beschreiben und begründen Sie die Auswahl der genutzten Datensätze;
+
+    -   👉 am besten in einem kurzen Methoden-Kapitel
+
+-   Stellen Sie die genutzten Datensätze kurz vor;
+
+-   Dokumentieren Sie Ihren Analyseverlauf (Code in den Anhang);
+
+-   Präsentieren Sie Ihre (Zwischen-)Ergebnisse;
+
+-   Beantworten Sie die Untersuchungsfragen.
+
+## Beispiel B: Bundesdeutsche Wahrnehmungen zur COVID-19 Pandemie
+
+Im Auftrag des Presse- und Informationsamts der Deutschen Bundesregierung wurden im Jahr 2021 mehrere repräsentative [Bevölkerungsbefragungen zum Thema "Corona-Krise"](https://search.gesis.org/?source=%7B%22query%22%3A%7B%22bool%22%3A%7B%22must%22%3A%5B%7B%22query_string%22%3A%7B%22query%22%3A%22trendfragen+corona+2021%22%2C%22default_operator%22%3A%22AND%22%7D%7D%5D%2C%22filter%22%3A%5B%7B%22term%22%3A%7B%22person.keyword%22%3A%22Presse-+und+Informationsamt+der+Bundesregierung%2C+Berlin%22%7D%7D%2C%7B%22term%22%3A%7B%22type%22%3A%22research_data%22%7D%7D%5D%7D%7D%7D) durchgeführt.
+
+🧨 **Your Mission:**
+
+-   Sichten Sie diese Befragungen und wählen anhand Ihrer persönlichen Interessen eine dieser Befragungen zur weiteren Untersuchung aus.
+
+-   Wählen Sie aus dieser Befragung zwei kategoriale Variablen aus, deren möglicher Zusammenhang Ihnen untersuchenswert erscheint. Begründen Sie diese Auswahl;
+
+-   Formulieren Sie daraus eine prägnante Untersuchungsfrage;
+
+-   Beschreiben Sie die beiden ausgewählten Variablen;
+
+-   Dokumentieren Sie ihre Vorannahmen zum untersuchenden Zusammenhang;
+
+-   Beschreiben und begründen Sie die angewandten statistischen Verfahren;
+
+    -   👉 am besten in einem kurzen Methoden-Kapitel
+
+-   Dokumentieren Sie Ihren Analyseverlauf (Code in den Anhang);
+
+-   Präsentieren Sie Ihre (Zwischen-)Ergebnisse;
+
+-   Beantworten Sie die Untersuchungsfrage.
+
+## Formalia
+
+Verfassen Sie zu diesen beiden Aufgabenteilen einen **Bericht** ...
+
+-   der den **Grundsätzen wissenschaftlichen Arbeitens** entspricht;
+
+-   der eine Seitenanzahl von **25** (all inclusive) nicht überschreitet;
+
+-   den Sie als ein **PDF (A4 Hochformat)** finalisieren;
+
+-   den Sie bis spätestens zum **15.08.2022 / 23.59 auf OLAT** im Baustein **"Abgabe \@Home3"** abgeben.
+
+### Deadline verpasst?
+
+Nachdem Sie sicherlich alle gestellten Deadlines einhalten werden, ist dieses Kapitel rein akademischer Natur. Hätten Sie eine Deadline verpasst, könnten Sie das jeweilige \@Home über den **Kummerkasten** auf OLAT nachreichen.
+
+------------------------------------------------------------------------
+
+**🤔 Challenge accepted?**
+
+![](images/agree-nod.gif){.videoframe width="250"}

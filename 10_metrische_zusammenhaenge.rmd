@@ -1,0 +1,524 @@
+# Zusammenhänge zwischen zwei metrischen Variablen {#zusammenhaenge-metrisch}
+
+
+## 📢 Zielsetzung dieser Einheit {.unnumbered}
+
+In dieser Einheit wollen wir uns den **Zusammenhängen zwischen metrischen Variablen** widmen. Dazu werden wir ...
+
++ mittels eines **Scatterplots (aka Streudiagramm)** den Zusammenhang zwischen zwei Variablen graphisch erkunden;
++ mittels geeigneter **Korrelationsmaße** den Zusammenhang zwischen zwei Variablen numerisch bestimmen;
++ und schließlich alternativ dazu den Zusammenhang zwischen zwei Variablen mittels einer **Regression** messen.
+
+```{r echo=FALSE, purl=FALSE}
+myScriptname <- "10_metrische_zusammenhaenge"
+
+knitr::asis_output(paste(
+  "<p><strong>tl;dr: </strong>",
+  "<a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/",
+  myScriptname,
+  ".R\" type=\"application/octet-stream\">Her mit dem Code!</a></p>",
+  sep = ""))
+```
+
+
+## Die Ausgangslage
+
+Um herauszufinden, ob zwischen zwei metrischen Variablen ein Zusammenhang besteht, nutzen wir die aus Einheit \@ref(ausgangDeskriptivMetrisch) bekannten Beispieldaten der [Österreichischen Agentur für Gesundheit und Ernährungssicherheit AGE](https://www.ages.at/startseite/) zu [COVID-19 Fällen in den politischen Bezirken Österreich](https://www.data.gv.at/katalog/dataset/2f6649b6-2b2d-49a9-ab31-6c7e43728001).
+
+> **👉 Anmerkung**: Wir gehen in dieser Einheit von folgender Verzeichnisstruktur aus:
+
+    **Projektfolder**
+    | skript_1.R
+    | ...
+    | skript_n.R    
+    +-- data
+    |     | datensatz_1.xyz
+    |     | ...
+    |     | datensatz_n.xyz
+    +-- output
+   
+Inhaltlich wollen wir uns mit folgender Frage beschäftigen 🤔:
+
+Besteht zwischen der **Anzahl an COVID-19 Erkrankten** und der an/mit **COVID-19 Verstorbenen** auf Ebene der Bezirke ein **Zusammenhang**?
+
+Dieser Frage wollen wir uns zunächst über einen [Scatterplot](https://de.wikipedia.org/wiki/Streudiagramm) annähern und danach mögliche Zusammenhänge numerisch beschreiben.
+
+
+## Datenimport und -aufbereitung
+
+Bevor wir uns der Erkundung des möglichen Zusammenhangs widmen können, müssen wir zunächst
+
+* die AGES-Rohdaten **importieren**
+* eine **Normierung** der Daten vornehmen (Variablen "..._100k")
+* und die **Bundeslandzugehörigkeit** der Bezirke (Variable "bula") ermitteln.
+
+Un damit kommen wir zu Folgendem:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(scales)
+library(ggrepel)
+
+agesRohdaten <- read.csv2("data/agesRohdaten_25-05-21.csv", encoding = "UTF-8") %>%
+  as_tibble()
+covidCases <- agesRohdaten %>%
+  mutate(Anzahl_100k = Anzahl/(AnzEinwohner/100000),
+         AnzahlTot_100k = AnzahlTot/(AnzEinwohner/100000),
+         Anzahl7Tage_100k = AnzahlFaelle7Tage/(AnzEinwohner/100000))
+covidCases <- covidCases %>%
+  mutate(bula = factor(floor(GKZ/100),
+                       levels = c(1:9),
+                       labels = c("Burgenland",
+                                  "Kärnten",
+                                  "Niederösterreich",
+                                  "Oberösterreich",
+                                  "Salzburg",
+                                  "Steiermark",
+                                  "Tirol",
+                                  "Vorarlberg",
+                                  "Wien")
+                       )
+         )
+```
+
+
+## Den Zusammenhang graphisch erkunden
+
+Der einfachste Weg einem möglichen Zusammenhang zwischen der Anzahl der COVID-19 Erkrankungen und Todesfälle je 100.000 Einwohnern nachzugehen, ist ein **Scatterplot** (aka "Streudiagramm"):
+
+```{r warning=FALSE}
+ggplot(covidCases, aes(x = Anzahl_100k, y = AnzahlTot_100k)) +
+  geom_point(size = 3, shape=21, fill = "red") +
+  ggrepel::geom_text_repel(aes(label = Bezirk),
+                size = 3,
+                color = "gray",
+                box.padding = 1) +
+  scale_x_continuous(labels = scales::label_comma(big.mark = ".", 
+                                                  decimal.mark = ",")) +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.text.x=element_text(angle = 45, hjust = 1)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene",
+       x = "\nCOVID-19 Fälle je 100.000 EW",
+       y = "an/mit COVID-19\nVerstorbene je 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at",
+       color = "Bundesland")
+```
+
+Die nach rechts oben strebende Punktwolke spricht für einen **positiven Zusammenhang (= (Korrelation)[https://de.wikipedia.org/wiki/Korrelation]**) zwischen den den COVID-19 Erkrankungen und Todesfällen (auf Ebene der Bezirke) in Österreich. Ob wir diesen Zusammenhang auch in den einzelnen Bundesländern beobachten können, zeigt uns eine **bundeslandspezifische Auswertung**:
+
+```{r warning=FALSE}
+ggplot(covidCases, aes(x = Anzahl_100k, y = AnzahlTot_100k)) +
+  geom_point(aes(fill = bula), shape=21, size = 3) +
+  ggrepel::geom_text_repel(aes(label = Bezirk),
+                size = 3,
+                color = "gray",
+                box.padding = 1) +  
+  scale_x_continuous(labels = scales::label_comma(big.mark = ".", 
+                                                  decimal.mark = ",")) +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene",
+       x = "\nCOVID-19 Fälle je 100.000 EW",
+       y = "an/mit COVID-19\nVerstorbene je 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at",
+       fill = "Bundesland")
+```
+
+Na ja: Die **Lesbarkeit** des erzeugten Scatterplots erscheint ausbaufähig 🧐. Eine Möglichkeit dazu:
+
+```{r}
+ggplot(covidCases, aes(x = Anzahl_100k, y = AnzahlTot_100k)) +
+  geom_point(aes(fill = bula), shape=21, size = 2.5) +
+  scale_x_continuous(labels = scales::label_comma(big.mark = ".", 
+                                                  decimal.mark = ",")) +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.text.x=element_text(angle = 90, vjust = 0.5)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene",
+       x = "\nCOVID-19 Fälle je 100.000 EW",
+       y = "an/mit COVID-19\nVerstorbene je 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at",
+       fill = "Bundesland") +
+  facet_wrap(~bula)
+```
+
+In dieser bundeslandspezifischen Betrachtung erkennen wir rasch, dass **regional** durchwegs **unterschiedlich ausgeprägte Zusammenhänge** zwischen den COVID-19 Erkrankungen und Todesfällen vorliegen: Während in Vorarlberg dieser Zusammenhang fast nicht erkennbar ist, ist dieser Zusammenhang im Burgenland deutlich vorhanden.
+
+
+## Den Zusammenhang numerisch abbilden
+
+Wir können den Zusammenhang zwischen zwei metrischen Variablen jedoch nicht nur graphisch erschließen. Anhand des [**Korrelationskoeffizienten nach Pearson**](https://www.methodenberatung.uzh.ch/de/datenanalyse_spss/zusammenhaenge/korrelation.html) können wir Zusammenhänge auch numerisch fassen. Wie dieser ermittelt wird, wollen wir uns anhand dieser Folien ansehen:
+
+```{r echo=FALSE}
+mySlideshow <- "eh9-2_zusammenhangsmasse_metrisch_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div><br>",
+  sep = ""))
+```
+
+### Überprüfung der Normalverteilung
+
+Um beurteilen zu können, ob unsere beiden Variablen von Interesse normalverteilt sind, werfen wir zunächst einen Blick auf die **Q-Q-Plots**:
+
+```{r}
+library(ggpubr)
+q1 <- ggplot(covidCases, aes(sample = Anzahl_100k)) +
+geom_qq(color = "red") +
+geom_qq_line() +
+labs(y = "Anzahl_100k")
+q2 <- ggplot(covidCases, aes(sample = AnzahlTot_100k)) +
+geom_qq(color = "red") +
+geom_qq_line() +
+labs(y = "AnzahlTot_100k")
+ggarrange(q1, q2,
+          # labels = c("AnzahlTot_100k", "AnzahlTot_100k"),
+          ncol = 2, nrow = 1)
+```
+
+Bei den an COVID Erkrankten sehen wir im oberen Wertspektrum klare Abweichungen von einer Normalverteilung, bei den an und mit COVID Verstorbenen sehen eine weitgehend gut Übereinstimmung mit einer Normalverteilung.
+
+Um diese erste Annäherung zu erhärten, wollen wir noch für diese Variablen einen **Shapiro-Wilk Test** berechnen:
+
+```{r}
+library(rstatix)
+covidCases %>%
+  summarise(across(c(Anzahl_100k,AnzahlTot_100k),
+                   ~ rstatix::shapiro_test(.)$p.value))
+```
+
+Und ja, nun sehen wir es in Zahlen: Während die Zahlen der an und mit COVID Verstorbenen normalverteilt sind, trifft dies auf die Infektionszahlen nicht zu.
+
+**🤔 Was heißt dies nun?**
+
+Da nur eine unserer beiden Variablen normalverteilt sind, wollen wir die Korrelation zwischen diesen beiden Variablen anhand der [Rangkorrelation nach Spearman](https://www.methodenberatung.uzh.ch/de/datenanalyse_spss/zusammenhaenge/rangkorrelation.html#1.2._Voraussetzungen) messen.
+
+Wären beide unserer Variablen normalverteilt, könnten wir dazu auf den [**Korrelationskoeffizienten nach Pearson**](https://www.methodenberatung.uzh.ch/de/datenanalyse_spss/zusammenhaenge/korrelation.html) zurückgreifgen.
+
+👉 Aus Übungsgründen werden wir beide Koeffizienten ermitteln, zur Beantwortung unserer Untersuchungsfrage jedoch die **Rangkorrelation nach Spearman** heranziehen.
+
+
+### Messung des Zusammenhangs zwischen COVID Erkrankungen und Todesfällen mittels Rangkorrelation
+
+Um die Rangkorrelation nach Spearman zu berechnen:
+
+```{r}
+cor.test(covidCases$Anzahl_100k, covidCases$AnzahlTot_100k, method = "spearman")
+```
+
+Dem Output entnehmen wir zwei wichtige Informationen:
+
+* Zwischen den Erkrankungen und Todesfällen besteht ein mittlerer, positiver Zusammenhang (rho = 0.3072427). Diese Interpretation des Rangkorrelationskoeffizienten [-1, +1] orientiert sich an folgender Daumenregel ( vgl. @Quatember2007):
+
+  -   0 bis +/- 0,2: *schwach* positiver/negativer Zusammenhang;
+
+  -   +/- 0,2 bis 0,6: *mittlerer* positiver/negativer Zusammenhang;
+
+  -   +/- 0,6 bis 1: *starker* positiver/negativer Zusammenhang.
+
+* Der angeführte p-Value (0.002699) signalisiert uns eine signifikante Korrelation zwischen den Erkrankten und Verstorbenen. Warum? Werfen wir einen Blick auf die dahinterliegenden Hypothesen:
+  + H0: Der Korrelationskoeffizient unterscheidet sich nicht signifikant von 0.
+  + H1: Der Korrelationskoeffizient unterscheidet sich signifikant von 0.
+
+  Anhand unseres p-Values von 0.002699 - der die von uns maximal akzeptierte Irrtumswahrscheinlichkeit α von 5% (= 0,05) klar unterschreitet - verwerfen wir also die Nullhypothese. 
+  
+### Messung des Zusammenhangs zwischen COVID Erkrankungen und Todesfällen mittels des Korrelationskoeffizienten nach Pearson
+
+⚡⚡⚡ Bitte nicht vergessen: Unsere Daten erfüllen nicht die Voraussetzungen zur Ermittlung des Korrelationskoeffizienten nach Pearson. Die nachfolgende Berechnung dient der Vorstellung der dazu notwendigen Funktionen. ⚡⚡⚡
+
+```{r}
+cor.test(covidCases$Anzahl_100k, covidCases$AnzahlTot_100k)
+```
+
+Trotz der nicht gegebenen Voraussetzungen, entspricht der Korrelationskoeffizient nach Pearson in unserem Fall fast dem Rangkorrelationskoeffizienten.
+
+
+### Ermittlung der bundeslandspezifischen Rangkorrelationskoeffizienten
+
+
+Wie wir vorhin mittels des bundeslandspezifischen Scatterplots festgestellt haben, fallen die Zusammenhänge regional unterschiedlich aus. Diese Feststellung können wir nun auch numerisch untermauern indem wir die **Korrelationskoeffizienten je Bundesland** ermitteln. Vorab müssen wir jedoch noch das Bundesland Wien (GKZ = 900) ausfiltern, da für einen einfachen Datenpunkt (im Bundesland Wien gibt es eben nur den politischen Bezirk Wien) keine Korrelation ermittelt werden kann. Abschließend lassen wir uns nur **signifikante Korrelationen** mit einem p-Value ≦ 0,05 ausgeben:
+
+```{r}
+r_values <- covidCases %>%
+  filter(GKZ != 900) %>%
+  group_by(bula) %>%
+  summarise(r = cor(Anzahl_100k, AnzahlTot_100k, method = "spearman"))
+p_values <- covidCases %>%
+  filter(GKZ != 900) %>%
+  group_by(bula) %>%
+  summarise(p = cor.test(Anzahl_100k, AnzahlTot_100k, method = "spearman")$p.value)
+r_values %>%
+  inner_join(p_values, by = c("bula")) %>%
+  filter(p <= 0.05) %>%
+  arrange(-r) %>%
+  knitr::kable(digits = 2)
+```
+
+Mit diesen Daten können wir unsere **Vermutungen** aus der graphischen Interpretation **bestätigen**: Während wir in Vorarlberg keine signifikante Korrelation zwischen COVID-19 Erkrankungen und Todesfällen feststellen können, sehen wir in Salzburg und dem Burgenland eine solche stark ausgeprägt vorliegen.
+
+> 📚 **Exkurs:** Wie immer gibt es viele Möglichkeiten in R, die Korrelationen zwischen Variablen (auch augeschlüsselt nach den Levels eines kategorialen Faktors) zu ermitteln. Beispielsweise bietet das [**Package GGally**](https://cran.r-project.org/web/packages/GGally/index.html) dazu die Möglichkeit für eine definierte Menge an Variablen **paarweise Korrelationen** zu ermitteln:
+
+```{r message=FALSE, warning=FALSE}
+library(GGally)
+covidCases %>%
+  filter(GKZ != 900) %>%
+  GGally::ggpairs(., columns = c("Anzahl_100k", "AnzahlTot_100k", "Anzahl7Tage_100k"),
+          legend = 1,
+          mapping = ggplot2::aes(color = bula),
+          diag = list(continuous = wrap("densityDiag", alpha=0.5)),
+          upper = list(continuous = wrap("cor", method = "spearman", size = 3))
+          ) +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at",
+       fill = "Bundesland")
+```
+
+> Eine Alternative um beispielsweise Scatterplots mit Korrelationskoeffizienten zu bereichern, bietet das [**ggpubr-Package**](https://rpkgs.datanovia.com/ggpubr/):
+
+```{r}
+library(ggpubr)
+ggscatter(covidCases, x = "Anzahl_100k", y = "AnzahlTot_100k",
+          color = "bula", palette = "jco",
+          alpha = 0.3,
+          size = 2.5) +
+  scale_x_continuous(labels = scales::label_comma(big.mark = ".",
+                                                  decimal.mark = ",")) +
+  facet_wrap(~bula) +
+  stat_cor(aes(color = bula),
+           method = "spearman",
+           p.accuracy = 0.01, 
+           r.accuracy = 0.01,
+           size = 3,
+           hjust = 1,
+           label.x = 12500,
+           label.y = 20) +
+  theme_bw() +
+  theme(text = element_text(size = 12),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.text.x=element_text(angle = 90, vjust = 0.5)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene",
+       x = "\nCOVID-19 Fälle je 100.000 EW",
+       y = "an/mit COVID-19\nVerstorbene je 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at",
+       color = "Bundesländer")
+```
+
+## Lineare Regression als alternativer Zugang
+
+Oftmals wird der Zusammenhang zweier metrischer Variablen mit Hilfe einer [**linearer Regression**](https://www.methodenberatung.uzh.ch/de/datenanalyse_spss/zusammenhaenge/ereg.html) abgebildet. Dieses Verfahren eignet sich bei linearen Zusammenhängen dazu, eine Variable aus der anderen abzuleiten:
+
+```{r echo=FALSE}
+mySlideshow <- "eh9-3_regression_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div><br>",
+  sep = ""))
+```
+
+
+Wir sehen also, dass durch Regression die zu erklärende Variable **kausal** (= mithilfe einer Formel - der sgn. Regressionsgleichung) aus der erklärenden Variable abgeleitet wird. Diese Regressionsgleichungen werden gerne zur **Visualisierung der Regressionsgeraden in Scatterplots** genutzt:
+
+```{r message=FALSE, warning=FALSE}
+ggplot(covidCases, aes(x = Anzahl_100k, y = AnzahlTot_100k)) +
+  geom_point(size = 3, shape=21, fill = "red") +
+  geom_smooth(method = "lm", formula= y~x, se = FALSE,
+              size = 1.25, color = "black") +
+  scale_x_continuous(labels = scales::label_comma(big.mark = ".", 
+                                                  decimal.mark = ",")) +
+  ggrepel::geom_text_repel(aes(label = Bezirk),
+              size = 3,
+              color = "gray",
+              box.padding = 1) +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.text.x=element_text(angle = 45, hjust = 1)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene",
+       x = "\nCOVID-19 Fälle je 100.000 EW",
+       y = "an/mit COVID-19\nVerstorbene je 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at",
+       color = "Bundesland")
+```
+
+Ein Nachteil der Visualisierung mittels des ggplot2-Packages, ist die nicht vorhandene Option **Informationen zur gewählten Regressionsgleichung** (wie R² etc.) in das Diagramm einzufügen. Diese Lücke versucht das bereits erwähnte [**ggpubr-Package**](https://rpkgs.datanovia.com/ggpubr/) zu füllen:
+
+```{r message=FALSE, warning=FALSE}
+ggscatter(covidCases, x = "Anzahl_100k", y = "AnzahlTot_100k",
+          shape=21, size = 3, fill = "red", color = "black",
+          add = "reg.line", add.params = list(color = "blue")) +
+  stat_cor(aes(label = paste(..rr.label..,
+                             ..p.label..,
+                             sep = "~`,`~")),
+           color = "blue",
+           label.x = 9000,
+           label.y = 245) +
+  stat_regline_equation(color = "blue",
+                        label.x = 9000,
+                        label.y = 220) +
+  ggrepel::geom_text_repel(aes(label = Bezirk),
+            size = 3,
+            color = "gray",
+            box.padding = 1) +
+  scale_x_continuous(labels = scales::label_comma(big.mark = ".", 
+                                                  decimal.mark = ",")) +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.text.x=element_text(angle = 45, hjust = 1)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene\n",
+       x = "\nCOVID-19 Fälle je 100.000 EW",
+       y = "an/mit COVID-19\nVerstorbene je 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at")
+```
+
+👉 Die **Daumenregel zur Interpretation** solcher Regressionsgeraden:\
+**Je flacher** die Regressionsgerade durch die Punktwolke verläuft **umso geringer** ist der Zusammenhang zwischen den beiden Variablen. **Je disperser** die Punktwolke um die Regressionsgerade verteilt ist, umso **geringer ist die Validität** (= Varianzaufklärung R²) der Regression.
+
+Auch im Fall der Regression kann eine **bundeslandspezifische Lösung** angefordert werden:
+
+```{r message=FALSE, warning=FALSE}
+ggscatter(covidCases, x = "Anzahl_100k", y = "AnzahlTot_100k",
+          color = "bula",
+          alpha = 0.3,
+          size = 2.5,
+          add = "reg.line",
+          cor.coeff.args = list(method = "pearson",
+                                label.sep = "\n")) +
+  stat_cor(aes(label = paste(..rr.label..,
+                             ..p.label..,
+                             sep = "~`,`~"),
+               color = bula),
+           size = 3,
+           label.x = 1500) +
+  scale_x_continuous(labels = scales::label_comma(big.mark = ".",
+                                                  decimal.mark = ",")) +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.text.x=element_text(angle = 45, hjust = 1)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene\n",
+       x = "\nCOVID-19 Fälle je 100.000 EW",
+       y = "an/mit COVID-19\nVerstorbene je 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at",
+       color = "Bundesland")
+```
+
+Unabhängig von der schlechten Unterscheidbarkeit der Farbkodierungen zeigt uns diese Abbildung, dass in den Bundesländern **durchwegs unterschiedlich starke Zusammenhänge (= Neigungen der Regressionsgeraden)** zwischen COVID-19 Erkrankungen und Todesfällen anzutreffen sind. Wäre dies nicht der Fall, würde die Regressionsgeraden der Bundesländer deckungsgleich übereinanderliegen.
+
+Die gleiche inhaltliche Aussage etwas übersichtlicher aufbereitet erhalten wir hiermit:
+
+```{r message=FALSE, warning=FALSE}
+ggscatter(covidCases, x = "Anzahl_100k", y = "AnzahlTot_100k",
+  color = "bula", palette = "jco",
+  alpha = 0.3,
+  size = 2.5,
+  add = "reg.line") +
+  scale_x_continuous(labels = scales::label_comma(big.mark = ".",
+                                                  decimal.mark = ",")) +
+  facet_wrap(~bula) +
+  stat_cor(aes(label = paste(..rr.label..,
+                             ..p.label..,
+                             sep = "~`,`~"),
+               color = bula),
+           p.accuracy = 0.01,
+           size = 3,
+           hjust = 1,
+           label.x = 12500,
+           label.y = 20) +
+  theme_bw() +
+  theme(text = element_text(size = 12),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.text.x=element_text(angle = 90, vjust = 0.5)) +
+  labs(title = "Zusammenhang COVID-19 Fälle & Verstorbene",
+       x = "\nCOVID-19 Fälle je 100.000 EW",
+       y = "an/mit COVID-19\nVerstorbene je 100.000 EW\n",
+       caption = "\nDaten: AGES, 2021 - covid19-dashboard@ages.at",
+       fill = "Bundesland")
+```
+
+## Konklusio
+
+Nach all dieser Rechnerei - was können wir nun über den Zusammenhang zwischen der Anzahl an COVID-19 Erkrankungen und Todesfällen je 100.000 Einwohner auf Ebener der Bezirke Österreichs sagen?
+
+Für **vier Bundesländer** konnten wir zum Stichtag 25.05.2021 einen **signifikanten Zusammenhang** feststellen:
+
+```{r}
+r_values %>%
+  inner_join(p_values, by = c("bula")) %>%
+  filter(p <= 0.05) %>%
+  arrange(-r) %>%
+  knitr::kable(digits = 2)
+```
+
+Während wir in Salzburg und dem Burgenland einen starken Zusammenhang nachweisen konnten, fällt dieser in Nieder- und Oberösterreich moderater aus. Für die restlichen Bundesländer konnten keine signifikanten Zusammenhänge festgestellt werden.
+
+Inhaltlich sind diese Erkenntnisse durchwegs bemerkenswert: So sehen wir beispielsweise im **West-Ost Vergleich** Vorarlberg vs. Burgenland, dass wir zeitgleich signifikante Koppelungen (Fall Burgenland) und Entkoppelungen von Infektionsgeschehen und Mortalität (Fall Vorarlberg) beobachten können.
+
+Warum dem so ist, können uns die hier angewandten Methode nicht beantworten. Drei von vielen denkbaren Thesen für die Erklärung der festgestellten regionalen Unterschiede wären:
+
+-   Die Bevölkerung in den Bundesländern ist unterschiedlich vulnerabel gegenüber COVID-19.
+
+-   Die Hospitalisierung von Erkrankten erfolgt in den Bundesländern zu unterschiedlichen Phasen des Erkrankungsverlaufs.
+
+-   Die medizinische Versorgung in diesen Bundesländern ist unterschiedlich effektiv gegenüber COVID-19.
+
+-   ...
+
+Es gibt also noch viele Thesen zu überprüfen ...
+
+
+------------------------------------------------------------------------
+
+🏆 **Nun wissen wir, ...**
+
+- dass Zusammenhänge graphisch über **Scatterplots (aka Streudiagramme)** interpretiert werden können;
+- dass **unterschiedliche Aggregationsstufen** (zB räumliche Bezugsebenen) bei einer solchen Interpretation helfen können;
+- dass wir Zusammenhänge numerisch über **Korrelationen** messen und auf deren **Signifikanz** untersuchen können;
+- dass **Regressionsgeraden** bei der graphischen Interpretation von Zusammenhängen hilfreich sein können;
+- dass Regressionen uns auch die Möglichkeit zur **Prognose** der abhängigen Variable bieten.
+
+Was uns jetzt noch fehlt, sind **Gruppenunterschiede** 🤓
+
+![](images/spock_skeptisch.gif){.videoframe width="250"}

@@ -1,0 +1,39 @@
+# \@Home1: Einen Fragebogen in Limesurvey umsetzen
+
+## 📢 Zielsetzung {.unnumbered}
+
+Ziel dieser Aufgabe ist es, selbständig a) einen vorgegebenen Fragebogen in Limesurvey umzusetzen, b) diesen Fragebogen aus Limesurvey zu exportieren und c) die dazu notwendigen Arbeitsschritte in einem Kurzbericht zu dokumentieren.
+
+---
+
+## Ausgangslage
+
+Borsdorf et al. (2009) haben für uns einen **Fragebogen** zur **Wahrnehmung der Fußballeuropameisterschaft EURO 2008** durch die Tirolerinnen und Tiroler vorbereitet. Dieser Fragebogen findet sich hier:
+http://www.uibk.ac.at/geographie/shop/inngeo/pdf/inngeo13_euro08.pdf
+
+
+## Aufgabenstellung
+
+* Setzen Sie den Fragebogen von Borsdorf et al. (2009) in **Limesurvey** (https://umfrage.uibk.ac.at/admin) um
+  + Inkl. Einleitungstext etc.
+* Erstellen Sie ein **max. einseitiges (exkl. Deckblatt) Protokoll** (PDF A4) zu den wahrgenommenen Limitation bzw. notwendigen Änderungen am Entwurf der Umfrage um diesen in Limesurvey umzusetzen
+* **Exportieren** Sie den Fragebogen als 
+  + Druckbares PDF (A4 Hochformat) für den offline Einsatz
+  + Umfrage-Struktur (*.lss)
+
+
+## Formelles
+
+* je 2-er Team 1 A4 Bericht als PDF
+    + Rekapitulation Aufgabenstellung
+    + Arbeitsschritte
+    + Wahrgenommene Limitationen bzw. Änderungen
+* Benennung: **Gruppe_XY_\@Home1.pdf**
+* Abgabe via **OLAT** - Ordner "Abgabe \@Home1"
+* Deadline: **29.04.22 / 23.59 Uhr**
+
+---
+
+**🤔 Challange accepted?**
+
+![](images/good.gif){.videoframe width="250"}

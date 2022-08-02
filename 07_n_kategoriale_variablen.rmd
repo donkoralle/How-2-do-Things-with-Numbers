@@ -1,0 +1,385 @@
+# Die Häufigkeitsanalyse kategorialer Daten {#haeufigkeit-kategorial}
+
+## 📢 Zielsetzung dieser Einheit {.unnumbered}
+
+In dieser Einheit wollen wir uns mit der uni- und bivariaten Häufigkeitsanalyse kategorialer Daten beschäftigen. Ausgehend von einem Beispiel zur Wahrnehmung von COVID-19 Schutzmaßnahmen werden wir dazu
+
+-   Strategien zur Datenvalidierung;
+
+-   sowie numerische und graphische Vorgehensweise zur Häufigkeitsanalyse kategorialer Variablen erproben.
+
+```{r echo=FALSE, purl=FALSE}
+myScriptname <- "07_n_kategoriale_variablen"
+
+knitr::asis_output(paste(
+  "<p><strong>tl;dr: </strong>",
+  "<a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/",
+  myScriptname,
+  ".R\" type=\"application/octet-stream\">Her mit dem Code!</a></p>",
+  sep = ""))
+```
+
+---
+
+
+## Kategoriale Daten auswerten {#katdatasetup}
+
+Auch für **nominale und ordinale Daten** - oftmals zusammenfassend als **kategoriale Daten** bezeichnet - steht uns eine Reihe von Analysemöglichkeiten zur Verfügung. Diese wollen wir uns hier anhand des folgenden Beispieldatensatzes genauer ansehen:
+
+Im Auftrag des Presse- und Informationsamts der Deutschen Bundesregierung wurden seit Kalenderwoche 12/2020 laufend repräsentative [Bevölkerungsbefragungen zum Thema "Corona-Krise"](https://dbk.gesis.org/dbksearch/GDesc2.asp?list=&search=&search2=&field=&field2=&jahr=&operator=&bool=&bool2=&maxRec=&sort=&DB=d&no=0205) durchgeführt. Eine dieser Befragungen wollen wir uns näher ansehen:
+
+👉 <https://search.gesis.org/research_data/ZA7677>
+
+Die Daten (inkl. Fragebogen etc.) dieser Befragung aus der Kalenderwoche 45/2020 wurden dem gesis-Repositorium des Leibniz-Instituts für Sozialwissenschaften entnommen und können 👉 [hier als ZIP-Datei geladen](data/Trendfragen_Corona_45-20.zip) werden.
+
+Nach dem Download extrahieren wir diese Daten in den Ordner "Trendfragen_Corona_45-20" in unserem "data"-Verzeichnis:
+
+        Projektfolder
+        | skript_1.R
+        | ...
+        | skript_n.R    
+        +-- data
+            +-- Trendfragen_Corona_45-20
+                | GESIS-Suche- Trendfragen Corona (Woche 45-2020).url
+                | ...
+                | ZA7677_v1-0-0.csv
+            | datensatz_1.csv
+            | ...
+            | datensatz_n.csv
+
+Wie uns der [Fragebogen (data/ZA7677_fb.pdf)](data/Trendfragen_Corona_45-20/ZA7677_fb.pdf) verrät, wurde eine Vielzahl an Merkmalen abgefragt. Aus dieser Vielzahl picken wir uns diese beiden Merkmale heraus:
+
+-   **Frage Nr. 5: Die beurteilte Angemessenheit der Maßnahmen zur Pandemiebekämpfung**\
+    Wie schätzen Sie die aktuellen politischen Maßnahmen ein, um das Corona-Virus einzudämmen: Sind diese getroffenen Maßnahmen Ihrer Meinung nach angemessen, gehen sie zu weit oder gehen sie nicht weit genug?
+
+-   **Frage s8: Die Politische Orientierung**\
+    Diese Frage zielt auf das Wahlverhalten der befragten Person der letzten Bundestagswahl ab. Wie genau dieses Wahlverhalten abgefragt wurde ist jedoch nicht dokumentiert 😢.
+
+**Ziel unserer Analyse** soll sein herauszufinden,
+
+1.  wie sich die beiden Merkmale über die Befragten verteilen;
+
+2.  wie sich die Verteilung dieser beiden Merkmale zueinander verhält.
+
+## Vorbereitendes
+
+Bevor wir uns die Befragungsdaten selbst genauer ansehen, laden wir zunächst das [Package tidyverse](https://www.tidyverse.org). Dieses Package besteht wiederum aus mehreren Packages, welche die Analyse von Daten erleichtern und nachvollziehbarer gestalten sollen.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+> 📚 **Exkurs:**\
+> Das Sammelpackage tidyverse bietet viele praktische Funktionalitäten, beispielsweise werden wir die sgn. [Pipes (= Weiterleitungen) des dplyr-Packages](https://style.tidyverse.org/pipes.html) nutzen. Mit Pipes kann Code übersichtlicher gestaltet werden, indem Ergebnisse einer Berechnung direkt als Input für einen anderen Schritt genutzt werden:
+
+```{r}
+somedata <- data.frame(zahlen = c(1,2,3,4,5,6,7,8,9,10))
+
+# statt:
+mean(somedata$zahlen)
+
+# geht jetzt:
+somedata %>%
+  summarise(mean(zahlen))
+# und das:
+somedata %>%
+  summarise(Durchschnitt = mean(zahlen),
+            Median = median(zahlen))
+# und das:
+somedata %>%
+  summary(.)
+```
+
+## Der Datenimport, die Datenaufbereitung und -validierung {#katdatamanipul}
+
+Der Import der Daten ist schnell erledigt:
+
+```{r}
+Trendfragen <- as_tibble(read.csv2("data/Trendfragen_Corona_45-20/ZA7677_v1-0-0.csv",
+                                   encoding = "UTF-8"))
+```
+
+Ein erster Blick auf diese verrät uns, dass den einzelnen Beobachtungen (= Zeilen) noch keine **eindeutigen IDs** zugewiesen wurden. Das ist durchaus praktisch, um im weiteren Verlauf einer Analyse einzelne Beobachtungen (aka. Records oder ebene Zeilen) direkt ansprechen zu können. Um dies nachzuholen nummerieren wir noch einmal alle Records durch:
+
+```{r}
+Trendfragen <- Trendfragen %>%
+  mutate(id = row_number())
+```
+
+Nun wollen wir den Datensatz etwas **ausdünnen** - sprich unsere Variablen von Interesse (bcor5 und s8) ausfiltern und deren **Skalenniveau** setzen (= in Factors überführen):
+
+```{r}
+df <- Trendfragen %>%
+  select(id, bcor5, s8) %>%
+  mutate(bcor5 = as.factor(bcor5), s8 = as.factor(s8))    # oder:
+  # mutate(across(c(bcor5, s8), factor))                  # oder:
+  # mutate(across(where(is.character), factor))
+
+glimpse(df)
+```
+
+Dann wollen wir noch überprüfen, ob sich nicht fehlende Werte - in der R-Logik sgn. **NAs** oder "Not Available"-Werte - eingeschlichen haben. Dazu können wir für jede unserer Variablen von Interesse die vorhandenen Merkmalsausprägungen zählen lassen:
+
+```{r}
+table(df$bcor5)
+# oder:
+df %>%
+  count(s8)
+```
+
+Vor allem bei kontinuierlichen Variablen ist diese Vorgehensweise aber suboptimal. Flotter geht es mit:
+
+```{r}
+colSums(is.na(df))
+
+# alternativ:
+df %>%
+  summarise(across(everything(), list(n_miss = ~ sum(is.na(.x)))))
+```
+
+Sieht gut aus - wir haben keine fehlenden (= NA) Werte. Ein Blick auf den Besatz der Kategorien der Frage s8 zum Wahlverhalten zeigt uns das **Vorhandensein der Kategorie "-1"**. Diese kann NichtwählerInnen kennzeichnen, was wir aber mangels Dokumentation nicht wissen können 😢. Der Übung halber wollen wir alle **Records ausschließen**, die bei Frage s8 die **Merkmalsausprägung "-1"** aufweisen:
+
+```{r}
+df2 <- df %>%
+  filter(s8 != "-1") %>%
+  mutate(s8 = droplevels(s8))
+
+df2 %>%
+  count(s8) %>%
+  arrange(n)
+  # arrange(desc(n))    # oder:
+  # arrange(-n)
+```
+
+## Die Häufikgeitsanalyse einer Variablen
+
+Damit können wir nun unsere erste Frage in Angriff nehmen:\
+Wie werden aktuelle **Maßnahmen zu Pandemiebekämpfung in Deutschland beurteilt**. Einen erste Annäherung an diese Frage erhalten wir hiermit:
+
+```{r}
+table(df2$bcor5)
+prop.table(table(df2$bcor5))
+```
+
+Einen kompakteren Überblick auf die **absoluten und relativen** Gewichte der Merkmalsausprägungen kann man mithilfe des [dplyr-Packages](https://cran.r-project.org/web/packages/dplyr/index.html) gewinnen:
+
+```{r}
+df2 %>%
+  group_by(bcor5) %>%
+  summarise(n = n()) %>%
+  mutate(relFreq = n / sum(n)) %>%
+  mutate(relFreq = round(relFreq, 2)) %>%
+  arrange(-relFreq)
+```
+
+Wir sehen, dass mehr als 60% aller Befragten die gesetzten Maßnahmen zur Pandemiebekämpfung als ausreichend und jeweils ein schwaches Fünftel diese Maßnahmen entweder als zu weitgehend oder als nicht weitgehend genug ansehen.
+
+Nachdem wir nun unsere erste Frage numerisch gelöst haben, wollen wir uns auch an einer **graphischen Lösung** versuchen:
+
+```{r}
+# cheap trick:
+ggplot(df2, aes(x = s8, y = ..count.., group = 1)) +
+  geom_bar()
+```
+
+Irgendwie schon und auch wieder nicht. Next try:
+
+```{r}
+# more shiny:
+ggplot(df2, aes(x = forcats::fct_infreq(s8), y = ..count.., group = 1)) +
+  geom_bar(fill = "blue", color = "black") +
+  coord_flip() +
+  labs(title = "Catchy Titel",
+     subtitle = "Was noch gesagt werden sollte",
+     x = "Polit. Orientierung\nletzte Bundestagswahl\n",
+     y = "\nabs. Anzahl",
+     caption = "\n(Daten: Presse- und Informationsamt der Deutschen Bundesregierung, 2021)") +
+  theme_bw() +
+  theme(text = element_text(size = 11),
+        plot.caption = element_text(hjust = 0.5))
+```
+
+Oder:
+
+```{r message=FALSE}
+# anders shiny:
+library(scales)   # zum Formatieren der Achsen etc.
+
+ggplot(df2, aes(x = forcats::fct_infreq(s8), y = ..prop.., group = 1)) +
+  geom_bar(fill = "red") +
+  labs(title = "Wieder ein catchy Titel",
+     subtitle = "Was noch immer gesagt werden sollte",
+     x = "\n Polit. Orientierung bei letzter Bundestagswahl",
+     y = "Anteile [%]\n",
+     caption = "\n(Daten: Presse- und Informationsamt der Deutschen Bundesregierung, 2021)") +
+  scale_y_continuous(labels = percent) +
+  theme_bw() +
+  theme(text = element_text(size = 11),
+        axis.text.x=element_text(angle = 45, hjust = 1),
+        plot.caption = element_text(hjust = 0.5))
+```
+
+Oder:
+
+```{r}
+# ein letztes mal anders shiny:
+library(RColorBrewer)   # Sammlung von diskreten& kontinuierlichen Farbpaletten
+display.brewer.all()
+
+ggplot(df2, aes(x = "", y = ..count.., fill = forcats::fct_rev(forcats::fct_infreq(s8)))) +
+  geom_bar(position = "fill", color = "black") +
+  coord_polar("y", start=0, direction = 1) +
+  scale_y_continuous(labels = percent) +
+  # scale_fill_brewer(palette = "Set1") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5),
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank()) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  labs(title = "Catchy Titel",
+     subtitle = "Was noch gesagt werden sollte",
+     caption = "\n(Daten: Presse- und Informationsamt der Deutschen Bundesregierung, 2021)",
+     fill = "polit. Ausrichtung")
+```
+
+You get it. Das [**ggplot2-Package**](https://ggplot2.tidyverse.org) **bietet unendlich viele Möglichkeiten**, sich in der Gestaltung von Abbildungen zu verlieren. Drei gute Startpunkte für die eigene weitere Auseinandersetzung damit:
+
+-   Hadley Wickhams Buch "ggplot2 - Elegant Graphics for Data Analysis": <https://ggplot2-book.org>
+
+-   Die R Graph Gallery: <https://www.r-graph-gallery.com/ggplot2-package.html>
+
+-   STHDAs "Be Awesome on ggplot2: <http://www.sthda.com/english/wiki/be-awesome-in-ggplot2-a-practical-guide-to-be-highly-effective-r-software-and-data-visualization>
+
+
+## Die Häufigkeitsanalyse zweier kategorialer Variablen {#katdatabivarn}
+
+Am Beginn dieser Einheit haben wir uns zwei Ziele für diese Analyse gesetzt:
+
+Wir wollten wissen, wie die Befragten Maßnahmen zur Pandemiebekämpfung in Deutschland beurteilen (**Frage bcor5**) und welche politischen Positionen diese vertreten (**Frage s8**). Diese beiden Teilfragen haben wir ja bereits behandelt. Ob sich die Beurteilung der Maßnahmen zur Pandemiebekämpfung mit der politischen Ausrichtung ändert oder nicht - who knows? 😉
+
+Die Antwort auf diese letzte Frage ist einfach: Wir natürlich! Dazu wollen wir uns zunächst eine einfache **Kontingenztabelle** mit den beiden Variablen **bcor5 und s8** basteln:
+
+```{r}
+table(df2$bcor5, df2$s8)
+
+table(df2$bcor5, df2$s8) %>%
+  prop.table(., margin = 2) %>%   # 2 ... Spaltenprozent
+  round(., 2)
+```
+
+Betrachtet man bei jeder Partei den relativen Besatz der Kategorien "angemessen" und "gehen zu weit", fallen große Unterschiede auf: Während die Hälfte der AFD-orientierten Befragten die Maßnahmen als zu weitreichend einstufen, tun dies gerade einmal 11% der grün-orientierten Befragten. Die politische Orientierung und die Beurteilung der Maßnahmen zur Pandemiebekämpfung in Deutschland scheinen also miteinander zu korrelieren.
+
+> 📚 **Exkurs:**\
+> Wie immer gibt es viele Wege [mit R eine Kontingenztabelle zu erzeugen](https://cran.r-project.org/web/packages/janitor/vignettes/tabyls.html). Beispielsweise etwas ungelenk (= längerer Code, nur Summenprozent) mittels des dplyr-Packages:
+
+```{r}
+df2 %>%
+  group_by(bcor5, s8) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  spread(c(s8), c(n))
+
+df2 %>%
+  group_by(bcor5, s8) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  mutate(relFreq = n / sum(n)) %>%
+  mutate(relFreq = round(relFreq, 2)) %>%
+  subset(select = c(bcor5, s8, relFreq)) %>%
+  spread(c(s8), c(relFreq))
+```
+
+> Eleganter geht es mit zum Beispiel mit dem [janitor-Package](https://garthtarr.github.io/meatR/janitor.html):
+
+```{r}
+library(janitor)
+janitor::tabyl(df2, bcor5, s8) %>%
+  adorn_totals(c('row')) %>%
+  adorn_percentages('col') %>% 
+  adorn_pct_formatting(digits = 0) %>%
+  # adorn_ns() %>%
+  adorn_title('combined') %>%
+  knitr::kable()
+```
+
+Nach der numerischen wollen wir natürlich auch wieder eine **graphische Lösung**. Wir starten wieder mit der Minimalvariante:
+
+```{r}
+ggplot(df2, aes(x = s8, fill = bcor5)) +
+  geom_bar()
+```
+
+Na ja, noch nicht ganz. Ein neuer Anlauf:
+
+```{r}
+ggplot(df2, aes(x = s8, fill = bcor5)) +
+  geom_bar(position = "fill", color = "black", width = 0.7) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip() +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5), 
+      plot.subtitle = element_text(hjust = 0.5),
+      plot.caption = element_text(hjust = 0.5),
+      panel.grid.major.x = element_line(color = "gray")) +
+  labs(title = "Catchy Titel",
+   subtitle = "Was noch gesagt werden sollte\n",
+   caption = "\n(Daten: Presse- und Informationsamt der Deutschen Bundesregierung, 2021)",
+   x = "polit. Aursrichtung\n",
+   y = "",
+   fill = "Beurteilung\nMaßnahmen") +
+  guides(fill = guide_legend(reverse = TRUE))
+```
+
+> 📚 **Ein Exkurs für PerfektionistInnen:**\
+> Die **Sortierung der Kategorienachse "polit. Ausrichtung"** könnte noch optimiert werden, um LerserInnen beispielsweise die politischen Ausrichtungen (Variable bcor5) anhand der Angemessenheit der Maßnahmen (Ausprägung "angemessen") absteigend darzustellen:
+
+```{r}
+# Kontingenztabelle ermitteln & als Dataframe ablegen
+konttab <- table(df2$bcor5, df2$s8) %>%
+  prop.table(., margin = 2) %>%   # 2 ... Spaltenprozent
+  round(., 2) %>%
+  as.data.frame()
+
+# gewünschte Reihenfolge herstellen & ablegen: 
+# Beurteilung angemessen absteigend nach rel. Häufigkeit
+vis.order <- konttab %>%
+  filter(Var1 == "angemessen") %>%
+  arrange(Freq) %>%
+  select(Var2)
+vis.order.vector <- as.character(vis.order$Var2)
+
+# Datensatz für Visualisierung vorbereiten
+vis.data.1 <- df2
+vis.data.1$s8 <- factor(df2$s8, levels = vis.order.vector)
+
+# Plotten
+ggplot(vis.data.1, aes(x = s8, fill = forcats::fct_rev(bcor5))) +
+  geom_bar(position = "fill", color = "black", width = 0.7) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip() +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5),
+      plot.caption = element_text(hjust = 0.5),
+      panel.grid.major.x = element_line(color = "gray")) +
+  labs(title = "Catchy Titel",
+   subtitle = "Was noch gesagt werden sollte\n",
+   caption = "\n(Daten: Presse- und Informationsamt der Deutschen Bundesregierung, 2021)",
+   x = "polit. Aursrichtung\n",
+   y = "",
+   fill = "Beurteilung\nMaßnahmen") +
+  guides(fill = guide_legend(reverse = TRUE))
+```
+
+------------------------------------------------------------------------
+
+🏆 **Nun wissen wir, ...**
+
+-   wie wir mittels des Tidyverse-Packages **gut lesbaren Code und Abbildungen** erstellen können.
+-   wie wir **Datensätze filtern** können.
+-   wie wir uni- und bivariate **Häufikgeitsauswertungen tabellarisch und graphisch** vornehmen können.
+-   dass es in R immer viele Wege gibt, um sein Ziel zu erreichen 😎.
+
+Lassen Sie uns nun in die **Zusammenhänge zwischen kategorialen Variablen** eintauchen ...
+
+![](images/warmup_1.gif){.videoframe width="250"}

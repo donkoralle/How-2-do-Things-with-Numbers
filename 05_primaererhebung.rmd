@@ -1,0 +1,126 @@
+# Primärdaten gewinnen
+
+## 📢 Zielsetzung dieser Einheit {.unnumbered}
+
+In dieser Einheit wollen wir drei unterschiedliche **Verfahren zur Gewinnung von Primärdaten** behandeln:
+
+1.  Nicht-reaktive Verfahren
+2.  Beobachtungen
+3.  Befragungen
+
+Primär wollen wir die Grundlagen dieser Verfahren wiederholen, für Details zu diesen Verfahren sei auf die [Literatur in der Ouvertüre zur VU](#literatur) verwiesen.
+
+
+## Nicht-rekative Verfahren
+
+Eine mittlerweile häufig genutzte Form der Datengewinnung stellen **nicht-reaktive Verfahren** dar. Was solche Verfahren kennzeichnet und welche **unterschiedlichen Datentypen** damit gewonnen werden können, wollen wir uns nun genauer ansehen. Im zweiten Teil der Folien werden wir uns anhand von Beispielen ansehen, wie mit solchen Verfahren auch semi-quantitative Daten erschlossen und ausgewertet werden können.
+
+```{r echo=FALSE}
+mySlideshow <- "eh5-1_nicht_reaktiv_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div>",
+  sep = ""))
+```
+
+
+## Beobachtungen
+
+Als zweite Gruppe der Verfahren zur Primärdatengewinnung wollen wir die Grundzüge der Beobachtung wiederholen. Dazu stellen wir uns am Beginn die Frage, was eine **wissenschaftliche** von einer alltäglichen Beobachtung unterscheidet und welche **unterschiedliche Formen** wissenschaftlicher Beobachtungen denkbar sind. Abschließend werfen wir einen Blick auf unterschiedliche **Hilfsmittel** zur praktischen Umsetzung von Beobachtungen.
+
+```{r echo=FALSE}
+mySlideshow <- "eh5-2_beobachtung_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div>",
+  sep = ""))
+```
+
+
+## Befragungen
+
+Als dritten Zugang zur Primärdatengewinnung widmen wir uns der **standardisierten Befragung**. Anhand eines schematischen Ablaufmodells werden wir unterschiedliche Schritte zur Planung und Umsetzung standardisierter Befragungen anhand einfacher Beispiele in einem **ScreenTalk** behandeln:
+
+
+<video  class="videoframe" width="600px" controls>
+
+<source src="https://lms.uibk.ac.at/podcast/1194197008/Jfzmxx/99384322564868/_/uibkolat_1_105538717192137/media/eh5_primardten_durch_befragung.mp4">
+
+</video>
+
+[Die Slides als PDF](https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/eh5-3_primaerdatengewinnung_3_befragung_v1.pdf)
+
+
+## Special: Die Stichprobenziehung
+
+Zu guter Letzt wollen wir noch einen kurzen Blick auf die Möglichkeiten zur repräsentativen und imformativen Stichprobenziehung werfen:
+
+
+```{r echo=FALSE}
+mySlideshow <- "eh5-1_primaer_sampling_v1"
+mySlideWidth <- 600
+mySlideHeight <- 450
+
+knitr::asis_output(paste(
+  "<iframe src=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\" width=\"",
+  mySlideWidth,
+  "px\" height=\"",
+  mySlideHeight,
+  "px\" class=\"videoframe\" allowfullscreen>Your browser doesnot support iframes <a href=\"<https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".html#1\">click here to view the page directly.</a></iframe>", sep = ""))
+knitr::asis_output(paste(
+  "<div><a href=\"https://kamihoeferl.at/lehre/vu_sozwiss_1/___slides/",
+  mySlideshow,
+  ".pdf\">Die Slides als PDF</a></div>",
+  sep = ""))
+```
+
+> **🚀 HandsOn: Stichprobenziehung in Action**
+>
+> Nach all der Theorie nun auch noch etwas zum selber machen: 4 ausgewählte Verfahren zur Stichprobenziehung in good old Excel:
+>
+> [**🔽 Die Excel-Datei kann hier heruntergeladen werden 🔽**](data/EH5-1_primaer_sampling_V4.xlsx)
+
+---
+
+🏆 **Nun wissen wir, ...**
+
+- dass mit **nicht-reaktiven Verfahren** Daten aus institutionellen Repositorien und sozialen Netzwerken gewonnen werden können.
+- dass mit systematischen **Beobachtungsverfahren** menschliches Verhalten, soziale Merkmale und geronnenes Verhalten erhoben werden kann.
+- dass mit **Befragungen** Meinungen, Wissen, Einstellungen und Bewertungen von Individuen und Gruppen erhoben werden können.
+- dass es unterschiedliche Verfahren zur **Stichprobenziehung** gibt, um die Qualität unserer Erhebungsdaten zu sichern. 
+
+🤔 Aber was machen wir dann mit all diesen Daten? #suspense
+
+![](images/spock_skeptisch.gif){.videoframe width="250"}
